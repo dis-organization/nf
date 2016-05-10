@@ -1,0 +1,52 @@
+---
+title: "Normal form for spatial data"
+author: "Michael Sumner"
+date: "9 May 2016"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Separate those data frames
+
+Long-form tables often contain repeated elements. Using some new approaches for non-standard evaluation and tidy data techniques makes is easy to "separate and normalize" these tables. Some examples. 
+
+The in-built quakes data set in R has a small number observations at the same location. 
+
+```{r}
+sum(duplicated(quakes[, c("long", "lat")]))
+library(dplyr)
+library(nf)
+nf(quakes, -long, -lat)
+```
+
+The function `nf` allows the user to specify which attributes (columns) to treat as `data`, normalizing that table to unique cases and recording an index from the original struture. 
+
+Why is this useful? 
+
+## Spatial data are hierarchical
+
+Say we have a series of animal tracks, with longitude, latitude, date-time, id of the animal and other observations of the animal (rather than its track). 
+
+```{r}
+tr <- data_frame(id = c(rep(1, 10), rep(2, 15)), 
+                 long = 1:25, 
+                 lat = rnorm(25) + id * 3, 
+                 trip = c(rep(1, 10), rep(2, 6), rep(3, 9)), 
+                 date = Sys.time() + seq(25) + sample(5, 25, replace = TRUE))
+
+library(ggplot2)
+ggplot(tr) + aes(x = long, y = lat, group = trip, col = factor(id)) + geom_line() + aes(x = long, y = lat, label = format(date, "%M:%S")) + geom_text()
+
+```
+
+We know these data are grouped in a hierarchical way, not only is there a grouping based on `id` there's also a trip for a given id, and we can have any number of vertex attributes - for spatial locations like longitude, latitude, time, height, depth, temperature. 
+
+The `nf` function allows us to specify which attributes are part of the geometry, and which of the topology, although in this case there's still a one-to-one. 
+
+
+```{r}
+nf(tr, -long, -lat, -date)
+ggplot(tr) + aes(x = long, y = lat, group = trip, col = factor(trip)) + geom_line()
