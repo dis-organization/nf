@@ -1,9 +1,6 @@
 library(maptools)
 data(wrld_simpl)
 
-
-
-
 # COMBO 1. 
 # Create coordinate-first table and link to object table
 # 
