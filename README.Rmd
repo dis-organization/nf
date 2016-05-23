@@ -17,19 +17,21 @@ New approach for gris.
 
 
 ```{r}
-## we expect that these attributes, taken together are "unique vertices" potentially shared by neighbours
-v_atts <- c("x_", "y_")
-
 library(spbabel) ## devtools::install_github("mdsumner/spbabel")
+library(dplyr)
 source("R/grist.r")
-#library(maptools)
-#data(wrld_simpl)
+library(maptools)
+data(wrld_simpl)
 #install.packages("rworldxtra")
 library(rworldxtra)
 data(countriesHigh)
-library(dplyr)
-#x <- gris2(wrld_simpl)
-x <- gris2(countriesHigh)
+
+d <- countriesHigh
+d1<- as.data.frame(d) %>% mutate(object_ = row_number())
+map1 <- sptable(d) 
+
+x <- gris2(d1, map1)
+
 verts <- with(x, o %>% filter(NAME == "Japan") %>% select(object_) %>% inner_join(b) %>% inner_join(bXv) %>% inner_join(v))
 library(ggplot2)
 ggplot(verts) + aes(x = x_, y = y_, fill = branch_, group = branch_) + geom_polygon()
@@ -50,11 +52,30 @@ ggplot(verts) + aes(x = x_, y = y_, fill = branch_, group = branch_) + geom_poly
 
 
 
-
-
 tr <- RTriangle::triangulate(p = RTriangle::pslg(xa$v %>% dplyr::select(x_, y_) %>% as.matrix(), 
                                                  S = seg2struct(xa) %>% as.matrix()),                                               a = 0.1)
 
 plot(tr$P, pch = ".")
 apply(tr$T, 1, function(a) lines(tr$P[a, ]))
+```
+
+
+Try conversion from other formats. 
+
+```{r}
+library(spatstat)
+  # polygon with hole
+  ho <- owin(poly=list(list(x=c(0,1,1,0), y=c(0,0,1,1)),
+                       list(x=c(0.6,0.4,0.4,0.6), y=c(0.2,0.2,0.4,0.4))))
+  
+as_df_bdry <- function(x) {
+  bind_rows(lapply(x$bdry, function(xb) data_frame(x_ = xb$x, y_ = xb$y)), .id = "branch_")
+}
+
+
+as_df_bdry(ho)
+as_df_branch_bdry(ho)
+
+
+
 ```

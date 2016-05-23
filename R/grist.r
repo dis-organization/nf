@@ -1,11 +1,25 @@
 
-gris2 <- function(x) {
+
+#' Title
+#'
+#' @param dat1 attribute table with object_ id, unique per row
+#' @param map1 vertex table, with object_, branch_, and vertex_ id
+#'
+#' @return
+#' @export
+#'
+#' @examples
+gris2 <- function(dat1, map1) {
+  ## we expect that these attributes, taken together are "unique vertices" potentially shared by neighbours
+  v_atts <- c("x_", "y_")
+  
   ## two tables (dat1, map1 - same as ggplot2 fortify)
   #map <- subset(x, NAME %in% c("Botswana", "Lesotho", "Namibia","South Africa", "Swaziland"))
-  map <- x
-  dat1<- as.data.frame(map) %>% mutate(object_ = row_number())
+ # map <- x
+ #  dat1<- as.data.frame(map) %>% mutate(object_ = row_number())
   ## please note, we add unique vertex label here - but this is tidy the overall process, it's not used until COMBO 3
-  map1 <- sptable(map) 
+#  map1 <- sptable(map) 
+
   map1 <- map1 %>% 
     mutate(vertex_  = as.integer(factor(do.call(paste, select_(map1, .dots = v_atts)))))
   map2 <- map1 %>% distinct(object_, branch_, island_) %>% dplyr::select(object_, branch_, island_)
