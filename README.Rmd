@@ -13,6 +13,31 @@ knitr::opts_chunk$set(
 ```
 
 
+The approaches required for Spatial data include the following. 
+
+- decompose to tables, at minimum as the fortify and attributes
+- then decompose objects to linked branches/vertices
+- then normalized those to de-duplicated vertices
+
+Maybe this ?can be done more directly, to get the entire table of vertices classified by branch
+
+This has to be able to be done dynamically, since a projection transformation or choice of vertex attributes can change the definition of "unique". 
+
+- straight composition from raster (no duplicated corner coords) and edge based models from paths
+- segment-  or edge-based forms are needed to drive the triangulation, and visualization
+
+
+extract_ always works with the geometry
+_join always works with the attributes
+
+apply_sp <- function(x) {
+  index <- vector("list", nrow(x))
+  for (i in seq_along(index)) index[[i]] <- sptable(x[i, ]) %>% mutate(object_ = i)
+  bind_rows(index)
+}
+
+
+
 New approach for gris. 
 
 
@@ -25,6 +50,13 @@ data(wrld_simpl)
 #install.packages("rworldxtra")
 library(rworldxtra)
 data(countriesHigh)
+# library(spdplyr)
+# d1 <- countriesHigh %>% filter(SOVEREIGNT == "Antarctica")
+# map1 <- sptable(d1) 
+# 
+# gg <- gris2(d1, map1)
+# gg$s <- grist(gg)
+#split(map1, map1$branch_)
 
 d <- countriesHigh
 d1<- as.data.frame(d) %>% mutate(object_ = row_number())
@@ -35,6 +67,25 @@ x <- gris2(d1, map1)
 verts <- with(x, o %>% filter(NAME == "Japan") %>% select(object_) %>% inner_join(b) %>% inner_join(bXv) %>% inner_join(v))
 library(ggplot2)
 ggplot(verts) + aes(x = x_, y = y_, fill = branch_, group = branch_) + geom_polygon()
+
+
+## trips should be indexing from the original data frame
+load("~/AMP2015/Data/tracks/EAnt_SES.RData")
+
+library(trip)
+library(dplyr)
+d <- as_data_frame(ses_tracks) %>% mutate(vertex_ = row_number())
+
+tr <- 
+  d %>% select(ref, gmt, vertex_) %>% distinct(ref, gmt, .keep_all = TRUE) %>%  arrange(ref, gmt)
+
+#library(magrittr)
+library(ggplot2)
+plot_tr <- function(x) {
+  dd <- tr %>% inner_join(d %>% select(LON, LAT, vertex_), "vertex_")
+  ggplot(dd[1:1000, ]) + aes(x = LON, y = LAT, group = ref, colour = ref) + geom_line()
+  
+}
 
 
 
@@ -50,8 +101,15 @@ verts <- with(xa, o %>% select(object_) %>% inner_join(b) %>% inner_join(bXv) %>
 library(ggplot2)
 ggplot(verts) + aes(x = x_, y = y_, fill = branch_, group = branch_) + geom_polygon()
 
+p <- xa$v %>% dplyr::select(x_, y_) %>% as.matrix()
+S <- seg2struct(xa) %>% as.matrix()
 
+p <- x$v %>% dplyr::select(x_, y_) %>% as.matrix()
+p <- gris:::llh2xyz(cbind(p, 0))
+S <- seg2struct(x) %>% as.matrix()
 
+library(rgl)
+lines3d(cbind(p, 0)[t(S), ])
 tr <- RTriangle::triangulate(p = RTriangle::pslg(xa$v %>% dplyr::select(x_, y_) %>% as.matrix(), 
                                                  S = seg2struct(xa) %>% as.matrix()),                                               a = 0.1)
 

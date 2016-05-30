@@ -1,6 +1,6 @@
 library(spbabel) ## devtools::install_github("mdsumner/spbabel")
 library(dplyr)
-source("R/grist.r")
+#source("R/grist.r")
 library(maptools)
 data(wrld_simpl)
 #install.packages("rworldxtra")

@@ -6,10 +6,8 @@ seatt ## the data, linked to semap by object_
 library(tidyr)
 ## nesting on object_ (so we match seatt for rows)
 obj <- semap  %>% nest(-object_) %>% inner_join(seatt) %>% select(object_, NAME, data)
-
 ## we now have all our geometry in one table, object attributes in the other
-## but the link is gone
-geom <- unnest(x %>% select(data))
+geom <- unnest(obj %>% select(data, object_))
 
 
 ## what I want is this in one operation
